@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Copyright 2025 Google LLC. The ces-genesys-adapter is made available as "Software"
+# under the agreement governing your use of Google Cloud Platform, including the
+# Service Specific Terms available at https://cloud.google.com/terms/service-terms.
+
+#!/bin/bash
+
+PROJECT_ID=my-project
+SERVICE_NAME=ces-genesys-adapter
+SERVICE_ACCOUNT=ces-genesys-adapter@${PROJECT_ID}.iam.gserviceaccount.com
+TIMEOUT=60m
+CONCURRENCY=5
+LOCATION=us-central1
+AGENT_ID=projects/my-project/locations/us/apps/1234-5678-9012-3456
+API_KEY_SECRET_PATH=projects/123456789012/secrets/my-api-key-path
+# AUTH_TOKEN_SECRET_PATH="projects/123456789012/secrets/my-secret-token-path"
+
+# PHONE NUMBER MAPPING CONFIGURATION (see "Phone Number to Agent Mapping" section in README.md)
+# Choose ONE of the following methods.
+# 1. Firestore (recommended for production)
+# NUMBERS_COLLECTION_ID="ces-twilio-adapter-mappings"
+# 2. Local JSON file (for development/testing)
+NUMBERS_CONFIG_FILE="number_mappings.json"

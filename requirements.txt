@@ -1,4 +1,6 @@
-websockets
+websockets>=10.0
 asyncio
 python-dotenv
 google-auth
+google-cloud-secret-manager
+audioop-lts

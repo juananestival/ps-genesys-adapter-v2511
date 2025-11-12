@@ -1,69 +1,125 @@
-# Polysynth Genesys AudioHook Adapter
+# Genesys Cloud to Google Conversational AI Adapter
 
-This repository contains a Python-based adapter that bridges Genesys Cloud AudioHook WebSocket connections with the Polysynth `bidiRunSession` API. It allows you to integrate your Genesys Cloud contact center with Polysynth agents for advanced conversational AI capabilities.
+Author: Igor Aiestaran
 
-## Features
+_Special thanks to Juanan Estival for showing me how to navigate the Genesys console in record time, which helped immensely in figuring this all out._
 
-*   **Bidirectional Audio Streaming**: Seamlessly streams audio between Genesys Cloud and Polysynth.
-*   **Audio Transcoding**: Automatically converts audio between Genesys Cloud's `PCMU` (µ-law) format and Polysynth's `LINEAR16` format.
-*   **Genesys AudioHook Protocol Compliance**: Handles `open`, `opened`, `ping`, `pong`, `close`, `closed`, and `update` messages as per the Genesys AudioHook session walkthrough.
-*   **Polysynth `bidiRunSession` Integration**: Communicates with Polysynth using its WebSocket API for real-time conversational AI.
-*   **Google Cloud Authentication**: Uses Application Default Credentials (ADC) for authenticating with Polysynth.
-*   **Basic Error Handling**: Sends `disconnect` messages to Genesys Cloud in case of errors.
+This repository contains a Python-based adapter that bridges Genesys Cloud AudioHook WebSocket connections with Google's Conversational Agents (Generative) (using the BidiRunSession API). It allows you to integrate your Genesys Cloud contact center with powerful, real-time AI agents.
 
-## Prerequisites
+## Background
 
-Before running this adapter, ensure you have the following installed:
+### Core Technologies
 
-*   Python 3.8+
-*   `pip` (Python package installer)
-*   Google Cloud Project with Polysynth enabled
-*   Google Cloud credentials configured (e.g., via `gcloud auth application-default login` or by setting the `GOOGLE_APPLICATION_CREDENTIALS` environment variable).
+*   **[Genesys Cloud](https://www.genesys.com/cloud)**: A suite of cloud services for enterprise-grade contact center management. It handles customer communications across voice, chat, email, and other channels.
 
-## Setup
+*   **[AudioHook](https://developer.genesys.cloud/devapps/audiohook/)**: A feature of Genesys Cloud that provides a real-time, bidirectional stream of a call's audio. It uses WebSockets to connect to a service that can monitor, record, or interact with the call audio.
 
-1.  **Navigate to the adapter directory**:
+*   **[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)**: A communication protocol that enables a two-way interactive communication session between a user's browser or client and a server. It is ideal for real-time applications like live audio streaming.
+
+*   **Conversational Agents from Google**: This refers to Google Cloud's powerful platform for building AI-powered conversational experiences. These tools allow you to design, build, and deploy sophisticated voice and chat agents.
+
+### What This Software Does
+
+This application acts as a **bridge** between Genesys Cloud and Google's conversational AI services. It receives the real-time audio stream from a phone call via Genesys AudioHook, forwards that audio to your Google conversational agent for processing, and streams the agent's voice response back into the phone call. This creates a seamless, real-time conversation between the caller and your AI agent.
+
+---
+
+## 1. How to Deploy to Cloud Run (Recommended)
+
+This method deploys the adapter as a scalable, serverless container on Google Cloud Run.
+
+### Step 1: Configure Deployment Values
+
+First, you need to create a configuration file with the specific details for your Google Cloud project and agent.
+
+1.  Copy the example configuration file:
     ```bash
-    cd ps-genesys-adapter
+    cp script/values.sh.example script/values.sh
     ```
 
-2.  **Install dependencies**:
+### Step 1a: Create a Service Account and Configure Authentication
+
+The Cloud Run service needs a Google Cloud service account to run as, which grants it permission to interact with your conversational AI agent.
+
+1.  **Create a service account:** If you don't have one already, create a service account for this adapter.
     ```bash
-    pip install -r requirements.txt
+    gcloud iam service-accounts create [SERVICE_ACCOUNT_NAME] --display-name="Genesys Adapter Service Account"
     ```
+    Replace `[SERVICE_ACCOUNT_NAME]` with a name like `genesys-adapter`. The full service account email will be `genesys-adapter@<your-project-id>.iam.gserviceaccount.com`. Use this full email for the `SERVICE_ACCOUNT` variable in your `values.sh` file.
 
-3.  **Configure environment variables**:
-    Create a `.env` file in the `ps-genesys-adapter` directory with the following content:
-    ```
-    # The port for the WebSocket server to listen on
-    PORT=8080
+2.  **Choose an authentication method:**
 
-    # The full resource name of your Polysynth agent
-    # e.g. projects/your-project-id/locations/global/apps/your-app-id
-    AGENT_ID=projects/your-project-id/locations/your-location/apps/your-app-id
+    *   **Option 1 (Recommended): Automatic Authentication**
 
-    # Optional: Path to your Google Cloud credentials file if not using ADC
-    # GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/keyfile.json
-    ```
-    **Replace `your-project-id`, `your-location`, and `your-app-id` with your actual Polysynth agent details.**
+        Grant the `roles/ces.client` role to your service account. This allows the adapter to automatically generate the necessary credentials to securely connect to your conversational agent.
+        ```bash
+        gcloud projects add-iam-policy-binding [PROJECT_ID] \
+            --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
+            --role="roles/ces.client"
+        ```
+        With this option, you can leave the `AUTH_TOKEN_SECRET_PATH` variable in `values.sh` empty.
 
-## Usage
+    *   **Option 2 (Advanced): Manual Token Management**
 
-To start the adapter, run the following command from the `ps-genesys-adapter` directory:
+        If your security model requires you to manage access tokens manually, you can specify a path to a secret in Google Secret Manager using the `AUTH_TOKEN_SECRET_PATH` variable in `values.sh`.
+
+        **Important:** You are responsible for ensuring the token in Secret Manager is valid and refreshed periodically. The adapter will simply read and use whatever token is stored there.
+
+### Step 1b: Configure Deployment Values
+
+Open `script/values.sh` in a text editor and fill in the required values. Key variables include:
+    *   `PROJECT_ID`: Your Google Cloud Project ID.
+    *   `SERVICE_NAME`: The name you want to give your Cloud Run service (e.g., `genesys-adapter`).
+    *   `SERVICE_ACCOUNT`: The service account the Cloud Run service will use.
+    *   `LOCATION`: The Google Cloud region where you want to deploy (e.g., `us-central1`).
+    *   `AGENT_ID`: The full resource name of your Conversational Agents app, in the format `projects/<PROJECT_ID>/locations/<LOCATION>/apps/<APP_ID>`.
+    *   `API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect.
+
+### Step 2: Run the Deployment Script
+
+Once your `values.sh` file is configured, run the deploy script:
 
 ```bash
-python main.py
+bash script/deploy.sh
 ```
 
-The adapter will start a WebSocket server on the specified `PORT` (default: 8080) and listen for incoming connections from Genesys Cloud.
+This script uses the `gcloud` CLI to build the container image, push it to the Artifact Registry, and deploy it to Cloud Run with all the specified configurations. After deployment, `gcloud` will output the public URL for your service, which you will use to configure the AudioHook in Genesys Cloud.
 
-## Genesys Cloud Configuration
+---
 
-To use this adapter with Genesys Cloud, you will need to configure an AudioHook integration in your Genesys Cloud environment. Point the AudioHook WebSocket endpoint to the public URL of your running adapter (e.g., `wss://your-adapter-url.com/`).
+## 2. How to Run Locally for Development
 
-## Future Improvements
+This method is ideal for testing and development. It uses Google Cloud Shell and `ngrok` to expose the local server to the public internet so Genesys Cloud can connect to it.
 
-*   **DTMF Handling**: Implement full support for DTMF (Dual-Tone Multi-Frequency) tones.
-*   **Media Format Negotiation**: Dynamically negotiate audio codecs with Genesys Cloud beyond the default `PCMU`.
-*   **Advanced Error Handling**: More granular error reporting and recovery mechanisms.
-*   **Scalability**: Implement load balancing and horizontal scaling for high-volume deployments.
+### Step 1: Open Cloud Shell
+
+Navigate to the [Google Cloud Console](https://console.cloud.google.com) and activate Cloud Shell.
+
+### Step 2: Run the Setup Script
+
+Clone this repository into your Cloud Shell environment and run the setup script:
+
+```bash
+bash script/setup-cloud-shell.sh
+```
+
+This script automatically performs the following actions:
+*   Installs `ngrok`, a utility to create a secure tunnel to your local environment.
+*   Activates the Python virtual environment for the project.
+
+### Step 3: Run the Server and Ngrok
+
+You will need two separate Cloud Shell terminals.
+
+1.  **In your first terminal**, start the adapter application:
+    ```bash
+    # Make sure you have configured your .env file with PORT, API_KEY, and AGENT_ID
+    python main.py
+    ```
+
+2.  **In a second terminal**, use `ngrok` to create a public URL that points to the local server (which runs on port 8080 by default):
+    ```bash
+    ngrok http 8080
+    ```
+
+`ngrok` will display a public "Forwarding" URL (e.g., `https://<random-string>.ngrok-free.app`). This is the secure public URL that you must use to configure the AudioHook integration in your Genesys Cloud environment for testing.
