@@ -98,7 +98,7 @@ Navigate to the [Google Cloud Console](https://console.cloud.google.com) and act
 
 ### Step 2: Run the Setup Script
 
-Clone this repository into your Cloud Shell environment and run the setup script:
+In your first Cloud Shell terminal, run the setup script. This will prepare your environment and start `ngrok`.
 
 ```bash
 bash script/setup-cloud-shell.sh
@@ -106,21 +106,25 @@ bash script/setup-cloud-shell.sh
 
 This script automatically performs the following actions:
 *   Installs `ngrok`, a utility to create a secure tunnel to your local environment.
-*   Activates the Python virtual environment for the project.
+*   Starts `ngrok` and dedicates the terminal to its output.
 
-### Step 3: Run the Server and Ngrok
+The script will finish by running `ngrok`, which will display a public "Forwarding" URL (e.g., `https://<random-string>.ngrok-free.app`). This is the secure public URL that you must use for the AudioHook integration in Genesys Cloud.
 
-You will need two separate Cloud Shell terminals.
+**Keep this terminal open.**
 
-1.  **In your first terminal**, start the adapter application:
+### Step 3: Run the Server
+
+You will need a second Cloud Shell terminal to run the adapter itself.
+
+1.  **Open a new terminal** and navigate to the project directory.
+
+2.  Activate the project's virtual environment:
+    ```bash
+    . .venv/bin/activate
+    ```
+
+3.  Start the adapter application:
     ```bash
     # Make sure you have configured your .env file with PORT and API_KEY
     python main.py
     ```
-
-2.  **In a second terminal**, use `ngrok` to create a public URL that points to the local server (which runs on port 8080 by default):
-    ```bash
-    ngrok http 8080
-    ```
-
-`ngrok` will display a public "Forwarding" URL (e.g., `https://<random-string>.ngrok-free.app`). This is the secure public URL that you must use to configure the AudioHook integration in your Genesys Cloud environment for testing.
