@@ -16,7 +16,7 @@ This repository contains a Python-based adapter that bridges Genesys Cloud Audio
 
 *   **[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)**: A communication protocol that enables a two-way interactive communication session between a user's browser or client and a server. It is ideal for real-time applications like live audio streaming.
 
-*   **Conversational Agents from Google**: This refers to Google Cloud's powerful platform for building AI-powered conversational experiences. These tools allow you to design, build, and deploy sophisticated voice and chat agents.
+*   **[Conversational Agents](https://cloud.google.com/customer-engagement-ai/conversational-agents/ps)**: This refers to Google Cloud's powerful platform for building AI-powered conversational experiences. These tools allow you to design, build, and deploy sophisticated voice and chat agents.
 
 ### What This Software Does
 
@@ -74,7 +74,7 @@ Open `script/values.sh` in a text editor and fill in the required values. Key va
     *   `LOCATION`: The Google Cloud region where you want to deploy (e.g., `us-central1`).
     *   `API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect.
 
-**Note on Agent ID**: The agent ID is now expected to be passed dynamically within the `inputVariables` of the Genesys "open" message as `_agent_id`. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
+**Note on Agent ID**: The agent ID is expected to be passed dynamically within the `inputVariables` of the Genesys "open" message as `_agent_id`. You can set these up in Architect (on the Genesys console) when setting up the integration in yoru flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
 
 ### Step 2: Run the Deployment Script
 
