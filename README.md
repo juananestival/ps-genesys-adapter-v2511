@@ -72,8 +72,9 @@ Open `script/values.sh` in a text editor and fill in the required values. Key va
     *   `SERVICE_NAME`: The name you want to give your Cloud Run service (e.g., `genesys-adapter`).
     *   `SERVICE_ACCOUNT`: The service account the Cloud Run service will use.
     *   `LOCATION`: The Google Cloud region where you want to deploy (e.g., `us-central1`).
-    *   `AGENT_ID`: The full resource name of your Conversational Agents app, in the format `projects/<PROJECT_ID>/locations/<LOCATION>/apps/<APP_ID>`.
     *   `API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect.
+
+**Note on Agent ID**: The agent ID is now expected to be passed dynamically within the `inputVariables` of the Genesys "open" message as `_agent_id`. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
 
 ### Step 2: Run the Deployment Script
 
@@ -113,7 +114,7 @@ You will need two separate Cloud Shell terminals.
 
 1.  **In your first terminal**, start the adapter application:
     ```bash
-    # Make sure you have configured your .env file with PORT, API_KEY, and AGENT_ID
+    # Make sure you have configured your .env file with PORT and API_KEY
     python main.py
     ```
 

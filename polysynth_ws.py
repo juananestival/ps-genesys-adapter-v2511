@@ -28,17 +28,17 @@ class PolysynthWS:
     def is_connected(self):
         return self.websocket and self.websocket.state == State.OPEN
 
-    async def connect(self):
-        self.session_id = f"{config.AGENT_ID}/sessions/{uuid.uuid4()}"
+    async def connect(self, agent_id):
+        self.session_id = f"{agent_id}/sessions/{uuid.uuid4()}"
         
         _, project_id = google.auth.default()
         
         try:
-            parts = config.AGENT_ID.split('/')
+            parts = agent_id.split('/')
             location_index = parts.index('locations')
             location = parts[location_index + 1]
         except (ValueError, IndexError):
-            logger.error(f"Could not extract location from AGENT_ID: {config.AGENT_ID}")
+            logger.error(f"Could not extract location from agent_id: {agent_id}")
             return
 
         token = await auth_provider.get_token()
@@ -76,6 +76,15 @@ class PolysynthWS:
         kickstart_message = {"realtimeInput": {"text": "Hello"}}
         await self.websocket.send(json.dumps(kickstart_message))
         logger.info(f"Sent kickstart message to Polysynth: {kickstart_message}")
+
+        if self.genesys_ws.polysynth_input_variables:
+            variables_message = {
+                "realtimeInput": {
+                    "variables": self.genesys_ws.polysynth_input_variables
+                }
+            }
+            await self.websocket.send(json.dumps(variables_message))
+            logger.info(f"Sent variables to Polysynth: {variables_message}")
 
     async def send_audio(self, audio_chunk):
         linear_audio_8k = audioop.ulaw2lin(audio_chunk, 2)

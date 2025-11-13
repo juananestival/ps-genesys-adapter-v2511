@@ -21,10 +21,6 @@ class GenesysWS:
 
     async def handle_connection(self):
         self.polysynth_ws = PolysynthWS(self)
-        await self.polysynth_ws.connect()
-
-        asyncio.create_task(self.polysynth_ws.listen())
-        asyncio.create_task(self.polysynth_ws.pacer())
 
         async for message in self.websocket:
             if isinstance(message, str):
@@ -44,7 +40,34 @@ class GenesysWS:
                 parameters = data.get("parameters", {})
                 self.conversation_id = parameters.get("conversationId")
                 self.input_variables = parameters.get("inputVariables")
+                
+                if self.input_variables and '_agent_id' in self.input_variables:
+                    self.agent_id = self.input_variables['_agent_id']
+                    self.polysynth_input_variables = {k: v for k, v in self.input_variables.items() if not k.startswith('_')}
+                else:
+                    logger.error("'_agent_id' not found in inputVariables from Genesys.")
+                    await self.send_disconnect("error", "Missing required parameter: _agent_id")
+                    return
+                
+                await self.polysynth_ws.connect(self.agent_id)
+                asyncio.create_task(self.polysynth_ws.listen())
+                asyncio.create_task(self.polysynth_ws.pacer())
+
                 logger.info(f"Genesys session opened for conversation ID: {self.conversation_id}")
+
+                custom_config_str = parameters.get("customConfig")
+                if custom_config_str:
+                    logger.info("Found customConfig from Genesys:")
+                    try:
+                        custom_config = json.loads(custom_config_str)
+                        if isinstance(custom_config, dict):
+                            for key, value in custom_config.items():
+                                logger.info(f"  - {key}: {value}")
+                        else:
+                            logger.warning("CUSTOMCONFIG IS NOT A KEY-VALUE PAIR:")
+                            logger.warning(f"  {custom_config}")
+                    except json.JSONDecodeError:
+                        logger.error(f"Error decoding customConfig JSON: {custom_config_str}")
 
                 offered_media = parameters.get("media", [])
                 selected_media = None

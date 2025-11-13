@@ -12,7 +12,6 @@ SERVICE_ACCOUNT=ces-genesys-adapter@${PROJECT_ID}.iam.gserviceaccount.com
 TIMEOUT=60m
 CONCURRENCY=5
 LOCATION=us-central1
-AGENT_ID=projects/my-project/locations/us/apps/1234-5678-9012-3456
 API_KEY_SECRET_PATH=projects/123456789012/secrets/my-api-key-path
 # AUTH_TOKEN_SECRET_PATH="projects/123456789012/secrets/my-secret-token-path"
 
