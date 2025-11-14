@@ -57,11 +57,39 @@ The Cloud Run service needs a Google Cloud service account to run as, which gran
             --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
             --role="roles/ces.client"
         ```
+        You also need to grant your service account access to the Genesys API key and client secret:
+        ```bash
+        gcloud secrets add-iam-policy-binding [API_KEY_SECRET_NAME] \
+            --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
+            --role="roles/secretmanager.secretAccessor"
+
+        gcloud secrets add-iam-policy-binding [CLIENT_SECRET_NAME] \
+            --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
+            --role="roles/secretmanager.secretAccessor"
+        ```
+        Replace `[API_KEY_SECRET_NAME]` and `[CLIENT_SECRET_NAME]` with the names of the secrets you created for the Genesys API key and client secret, respectively.
+
         With this option, you can leave the `AUTH_TOKEN_SECRET_PATH` variable in `values.sh` empty.
 
     *   **Option 2 (Advanced): Manual Token Management**
 
         If your security model requires you to manage access tokens manually, you can specify a path to a secret in Google Secret Manager using the `AUTH_TOKEN_SECRET_PATH` variable in `values.sh`.
+
+        You will need to grant your service account access to the Genesys API key secret, the client secret, and the auth token secret:
+        ```bash
+        gcloud secrets add-iam-policy-binding [GENESYS_API_KEY_SECRET_NAME] \
+            --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
+            --role="roles/secretmanager.secretAccessor"
+
+        gcloud secrets add-iam-policy-binding [GENESYS_CLIENT_SECRET_NAME] \
+            --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
+            --role="roles/secretmanager.secretAccessor"
+
+        gcloud secrets add-iam-policy-binding [AUTH_TOKEN_SECRET_NAME] \
+            --member="serviceAccount:[FULL_SERVICE_ACCOUNT_EMAIL]" \
+            --role="roles/secretmanager.secretAccessor"
+        ```
+        Replace `[GENESYS_API_KEY_SECRET_NAME]`, `[GENESYS_CLIENT_SECRET_NAME]`, and `[AUTH_TOKEN_SECRET_NAME]` with the names of the respective secrets.
 
         **Important:** You are responsible for ensuring the token in Secret Manager is valid and refreshed periodically. The adapter will simply read and use whatever token is stored there.
 
@@ -72,7 +100,8 @@ Open `script/values.sh` in a text editor and fill in the required values. Key va
     *   `SERVICE_NAME`: The name you want to give your Cloud Run service (e.g., `genesys-adapter`).
     *   `SERVICE_ACCOUNT`: The service account the Cloud Run service will use.
     *   `LOCATION`: The Google Cloud region where you want to deploy (e.g., `us-central1`).
-    *   `GENESYS_API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect.
+    *   `GENESYS_API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect. **Ensure this secret exists and has a value configured.**
+    *   `GENESYS_CLIENT_SECRET_PATH`: The full resource path to the Secret Manager secret containing the client secret for request signature verification.
 
 **Note on Agent ID**: The agent ID is expected to be passed dynamically within the `inputVariables` of the Genesys "open" message as `_agent_id`. You can set these up in Architect (on the Genesys console) when setting up the integration in yoru flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
 
