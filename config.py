@@ -8,5 +8,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PORT = os.getenv("PORT", 8080)
-API_KEY = os.getenv("API_KEY")
+GENESYS_API_KEY = os.getenv("GENESYS_API_KEY")
 AUTH_TOKEN_SECRET_PATH = os.getenv("AUTH_TOKEN_SECRET_PATH")
+GENESYS_CLIENT_SECRET = os.getenv("GENESYS_CLIENT_SECRET")

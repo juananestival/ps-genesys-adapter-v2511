@@ -20,6 +20,6 @@ gcloud run deploy $SERVICE_NAME \
     --timeout=$TIMEOUT \
     --concurrency=$CONCURRENCY \
     --set-env-vars=AUTH_TOKEN_SECRET_PATH="$AUTH_TOKEN_SECRET_PATH",NUMBERS_COLLECTION_ID="$NUMBERS_COLLECTION_ID" \
-    --set-secrets=API_KEY="$API_KEY_SECRET_PATH" \
+    --set-secrets=GENESYS_API_KEY="$GENESYS_API_KEY_SECRET_PATH",GENESYS_CLIENT_SECRET="$GENESYS_CLIENT_SECRET_PATH" \
     --allow-unauthenticated \
     --startup-probe=httpGet.path=/health,httpGet.port=8080

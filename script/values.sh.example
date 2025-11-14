@@ -12,7 +12,8 @@ SERVICE_ACCOUNT=ces-genesys-adapter@${PROJECT_ID}.iam.gserviceaccount.com
 TIMEOUT=60m
 CONCURRENCY=5
 LOCATION=us-central1
-API_KEY_SECRET_PATH=projects/123456789012/secrets/my-api-key-path
+GENESYS_API_KEY_SECRET_PATH=projects/123456789012/secrets/my-api-key-path
+GENESYS_CLIENT_SECRET_PATH=projects/123456789012/secrets/my-genesys-client-secret
 # AUTH_TOKEN_SECRET_PATH="projects/123456789012/secrets/my-secret-token-path"
 
 # PHONE NUMBER MAPPING CONFIGURATION (see "Phone Number to Agent Mapping" section in README.md)

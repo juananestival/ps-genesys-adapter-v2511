@@ -72,7 +72,7 @@ Open `script/values.sh` in a text editor and fill in the required values. Key va
     *   `SERVICE_NAME`: The name you want to give your Cloud Run service (e.g., `genesys-adapter`).
     *   `SERVICE_ACCOUNT`: The service account the Cloud Run service will use.
     *   `LOCATION`: The Google Cloud region where you want to deploy (e.g., `us-central1`).
-    *   `API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect.
+    *   `GENESYS_API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect.
 
 **Note on Agent ID**: The agent ID is expected to be passed dynamically within the `inputVariables` of the Genesys "open" message as `_agent_id`. You can set these up in Architect (on the Genesys console) when setting up the integration in yoru flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
 
@@ -125,6 +125,6 @@ You will need a second Cloud Shell terminal to run the adapter itself.
 
 3.  Start the adapter application:
     ```bash
-    # Make sure you have configured your .env file with PORT and API_KEY
+    # Make sure you have configured your .env file with PORT and GENESYS_API_KEY
     python main.py
     ```
