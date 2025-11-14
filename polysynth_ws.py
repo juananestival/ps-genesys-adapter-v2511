@@ -21,6 +21,7 @@ class PolysynthWS:
         self.genesys_ws = genesys_ws
         self.websocket = None
         self.session_id = None
+        self.deployment_id = None
         self.ratecv_state_to_va = None
         self.ratecv_state_to_genesys = None
         self.audio_out_queue = asyncio.Queue()
@@ -28,8 +29,9 @@ class PolysynthWS:
     def is_connected(self):
         return self.websocket and self.websocket.state == State.OPEN
 
-    async def connect(self, agent_id):
+    async def connect(self, agent_id, deployment_id=None):
         self.session_id = f"{agent_id}/sessions/{uuid.uuid4()}"
+        self.deployment_id = deployment_id
         
         _, project_id = google.auth.default()
         
@@ -70,6 +72,8 @@ class PolysynthWS:
                 },
             }
         }
+        if self.deployment_id:
+            config_message["config"]["deployment"] = self.deployment_id
         await self.websocket.send(json.dumps(config_message))
         logger.info(f"Sent config message to Polysynth: {config_message}")
 

@@ -103,7 +103,11 @@ Open `script/values.sh` in a text editor and fill in the required values. Key va
     *   `GENESYS_API_KEY_SECRET_PATH`: The full resource path to the Secret Manager secret containing the API key that Genesys will use to connect. **Ensure this secret exists and has a value configured.**
     *   `GENESYS_CLIENT_SECRET_PATH`: The full resource path to the Secret Manager secret containing the client secret for request signature verification.
 
-**Note on Agent ID**: The agent ID is expected to be passed dynamically within the `inputVariables` of the Genesys "open" message as `_agent_id`. You can set these up in Architect (on the Genesys console) when setting up the integration in yoru flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
+**Note on Agent and Deployment IDs**: You must pass either an agent ID or a deployment ID within the `inputVariables` of the Genesys "open" message.
+> *   `_agent_id`: The full agent ID.
+> *   `_deployment_id`: The full deployment ID (e.g., `projects/.../deployments/...`). If you provide a deployment ID, the adapter will automatically extract the agent ID from it and include the deployment ID in the request to the conversational agent.
+>
+> You can set these up in Architect (on the Genesys console) when setting up the integration in your flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
 
 ### Step 2: Run the Deployment Script
 

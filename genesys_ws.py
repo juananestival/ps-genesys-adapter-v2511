@@ -41,15 +41,33 @@ class GenesysWS:
                 self.conversation_id = parameters.get("conversationId")
                 self.input_variables = parameters.get("inputVariables")
                 
-                if self.input_variables and '_agent_id' in self.input_variables:
-                    self.agent_id = self.input_variables['_agent_id']
+                self.deployment_id = None
+                self.agent_id = None
+
+                if self.input_variables:
+                    if '_deployment_id' in self.input_variables:
+                        self.deployment_id = self.input_variables['_deployment_id']
+                        # Extract agent_id from deployment_id
+                        # deployment_id format: projects/{project}/locations/{location}/apps/{app_id}/deployments/{deployment_id}
+                        # agent_id format: projects/{project}/locations/{location}/apps/{app_id}
+                        parts = self.deployment_id.split('/')
+                        if len(parts) == 8 and parts[6] == 'deployments':
+                            self.agent_id = '/'.join(parts[:6])
+                        else:
+                            logger.error(f"Invalid _deployment_id format: {self.deployment_id}")
+                            await self.send_disconnect("error", "Invalid _deployment_id format")
+                            return
+                    elif '_agent_id' in self.input_variables:
+                        self.agent_id = self.input_variables['_agent_id']
+
                     self.polysynth_input_variables = {k: v for k, v in self.input_variables.items() if not k.startswith('_')}
-                else:
-                    logger.error("'_agent_id' not found in inputVariables from Genesys.")
-                    await self.send_disconnect("error", "Missing required parameter: _agent_id")
+
+                if not self.agent_id:
+                    logger.error("'_agent_id' or '_deployment_id' not found in inputVariables from Genesys.")
+                    await self.send_disconnect("error", "Missing required parameter: _agent_id or _deployment_id")
                     return
                 
-                await self.polysynth_ws.connect(self.agent_id)
+                await self.polysynth_ws.connect(self.agent_id, self.deployment_id)
                 asyncio.create_task(self.polysynth_ws.listen())
                 asyncio.create_task(self.polysynth_ws.pacer())
 
