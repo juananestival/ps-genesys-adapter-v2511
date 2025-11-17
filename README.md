@@ -1,9 +1,5 @@
 # Genesys Cloud to Google Conversational AI Adapter
 
-Author: Igor Aiestaran
-
-_Special thanks to Juanan Estival for showing me how to navigate the Genesys console in record time, which helped immensely in figuring this all out._
-
 This repository contains a Python-based adapter that bridges Genesys Cloud AudioHook WebSocket connections with Google's Conversational Agents (Generative) (using the BidiRunSession API). It allows you to integrate your Genesys Cloud contact center with powerful, real-time AI agents.
 
 ## Background
