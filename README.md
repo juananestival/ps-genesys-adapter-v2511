@@ -107,7 +107,7 @@ Open `script/values.sh` in a text editor and fill in the required values. Key va
 > *   `_agent_id`: The full agent ID.
 > *   `_deployment_id`: The full deployment ID (e.g., `projects/.../deployments/...`). If you provide a deployment ID, the adapter will automatically extract the agent ID from it and include the deployment ID in the request to the conversational agent.
 >
-> You can set these up in Architect (on the Genesys console) when setting up the integration in your flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to Polysynth.
+> You can set these up in Architect (on the Genesys console) when setting up the integration in your flow. Any other variables in `inputVariables` (not starting with an underscore) will be forwarded to CES.
 
 ### Step 2: Run the Deployment Script
 

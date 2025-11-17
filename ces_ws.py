@@ -16,7 +16,7 @@ from auth import auth_provider
 
 logger = logging.getLogger(__name__)
 
-class PolysynthWS:
+class CESWS:
     def __init__(self, genesys_ws):
         self.genesys_ws = genesys_ws
         self.websocket = None
@@ -47,7 +47,7 @@ class PolysynthWS:
 
         ws_url = f"wss://ces.googleapis.com/ws/google.cloud.ces.v1.SessionService/BidiRunSession/locations/{location}"
 
-        logger.info(f"Connecting to Polysynth at {ws_url}")
+        logger.info(f"Connecting to CES at {ws_url}")
         self.websocket = await websockets.connect(
             ws_url,
             additional_headers={
@@ -55,7 +55,7 @@ class PolysynthWS:
                 "X-Goog-User-Project": project_id,
             }
         )
-        logger.info("Connected to Polysynth")
+        logger.info("Connected to CES")
         await self.send_config_message()
 
     async def send_config_message(self):
@@ -75,20 +75,20 @@ class PolysynthWS:
         if self.deployment_id:
             config_message["config"]["deployment"] = self.deployment_id
         await self.websocket.send(json.dumps(config_message))
-        logger.info(f"Sent config message to Polysynth: {config_message}")
+        logger.info(f"Sent config message to CES: {config_message}")
 
         kickstart_message = {"realtimeInput": {"text": "Hello"}}
         await self.websocket.send(json.dumps(kickstart_message))
-        logger.info(f"Sent kickstart message to Polysynth: {kickstart_message}")
+        logger.info(f"Sent kickstart message to CES: {kickstart_message}")
 
-        if self.genesys_ws.polysynth_input_variables:
+        if self.genesys_ws.ces_input_variables:
             variables_message = {
                 "realtimeInput": {
-                    "variables": self.genesys_ws.polysynth_input_variables
+                    "variables": self.genesys_ws.ces_input_variables
                 }
             }
             await self.websocket.send(json.dumps(variables_message))
-            logger.info(f"Sent variables to Polysynth: {variables_message}")
+            logger.info(f"Sent variables to CES: {variables_message}")
 
     async def send_audio(self, audio_chunk):
         linear_audio_8k = audioop.ulaw2lin(audio_chunk, 2)
@@ -115,9 +115,9 @@ class PolysynthWS:
                     await self.audio_out_queue.put(mulaw_audio)
 
                 elif "sessionOutput" in data and "text" in data["sessionOutput"]:
-                    logger.info(f"Received text from Polysynth: {data['sessionOutput']['text']}")
+                    logger.info(f"Received text from CES: {data['sessionOutput']['text']}")
         except Exception as e:
-            logger.error(f"Error in Polysynth listener: {e}")
+            logger.error(f"Error in CES listener: {e}")
 
     async def pacer(self):
         logger.info("Starting audio pacer for Genesys")

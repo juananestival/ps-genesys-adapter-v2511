@@ -5,14 +5,14 @@
 import asyncio
 import json
 import logging
-from polysynth_ws import PolysynthWS
+from ces_ws import CESWS
 
 logger = logging.getLogger(__name__)
 
 class GenesysWS:
     def __init__(self, websocket):
         self.websocket = websocket
-        self.polysynth_ws = None
+        self.ces_ws = None
         self.last_server_sequence_number = 0
         self.last_client_sequence_number = 0
         self.client_session_id = None
@@ -20,7 +20,7 @@ class GenesysWS:
         self.input_variables = None
 
     async def handle_connection(self):
-        self.polysynth_ws = PolysynthWS(self)
+        self.ces_ws = CESWS(self)
 
         async for message in self.websocket:
             if isinstance(message, str):
@@ -60,16 +60,16 @@ class GenesysWS:
                     elif '_agent_id' in self.input_variables:
                         self.agent_id = self.input_variables['_agent_id']
 
-                    self.polysynth_input_variables = {k: v for k, v in self.input_variables.items() if not k.startswith('_')}
+                    self.ces_input_variables = {k: v for k, v in self.input_variables.items() if not k.startswith('_')}
 
                 if not self.agent_id:
                     logger.error("'_agent_id' or '_deployment_id' not found in inputVariables from Genesys.")
                     await self.send_disconnect("error", "Missing required parameter: _agent_id or _deployment_id")
                     return
                 
-                await self.polysynth_ws.connect(self.agent_id, self.deployment_id)
-                asyncio.create_task(self.polysynth_ws.listen())
-                asyncio.create_task(self.polysynth_ws.pacer())
+                await self.ces_ws.connect(self.agent_id, self.deployment_id)
+                asyncio.create_task(self.ces_ws.listen())
+                asyncio.create_task(self.ces_ws.pacer())
 
                 logger.info(f"Genesys session opened for conversation ID: {self.conversation_id}")
 
@@ -154,8 +154,8 @@ class GenesysWS:
         return self.last_server_sequence_number
 
     async def handle_binary_message(self, message):
-        if self.polysynth_ws:
-            await self.polysynth_ws.send_audio(message)
+        if self.ces_ws:
+            await self.ces_ws.send_audio(message)
 
     async def send_message(self, message):
         await self.websocket.send(json.dumps(message))
