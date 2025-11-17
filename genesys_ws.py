@@ -17,6 +17,7 @@ import json
 import logging
 
 from ces_ws import CESWS
+from redaction import redact
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ class GenesysWS:
                 await self.handle_binary_message(message)
 
     async def handle_text_message(self, message):
-        logger.info(f"Received text message from Genesys: {message}")
+        redacted_message = redact(message)
+        logger.info(f"Received text message from Genesys: {redacted_message}")
         try:
             data = json.loads(message)
             self.last_client_sequence_number = data.get("seq")

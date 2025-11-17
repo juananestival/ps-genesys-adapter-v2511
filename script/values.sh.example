@@ -22,3 +22,4 @@ GENESYS_CLIENT_SECRET_PATH=projects/123456789012/secrets/my-genesys-client-secre
 # NUMBERS_COLLECTION_ID="ces-twilio-adapter-mappings"
 # 2. Local JSON file (for development/testing)
 NUMBERS_CONFIG_FILE="number_mappings.json"
+LOG_UNREDACTED_DATA="false"

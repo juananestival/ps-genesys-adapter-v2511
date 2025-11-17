@@ -24,6 +24,7 @@ import websockets
 from websockets.connection import State
 
 from auth import auth_provider
+from redaction import redact
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +104,8 @@ class CESWS:
                 "realtimeInput": {"variables": self.genesys_ws.ces_input_variables}
             }
             await self.websocket.send(json.dumps(variables_message))
-            logger.info(f"Sent variables to CES: {variables_message}")
+            redacted_variables_message = redact(variables_message)
+            logger.info(f"Sent variables to CES: {redacted_variables_message}")
 
     async def send_audio(self, audio_chunk):
         linear_audio_8k = audioop.ulaw2lin(audio_chunk, 2)
@@ -135,8 +137,10 @@ class CESWS:
                     await self.audio_out_queue.put(mulaw_audio)
 
                 elif "sessionOutput" in data and "text" in data["sessionOutput"]:
+                    text = data['sessionOutput']['text']
+                    redacted_text = redact(text)
                     logger.info(
-                        f"Received text from CES: {data['sessionOutput']['text']}"
+                        f"Received text from CES: {redacted_text}"
                     )
         except Exception as e:
             logger.error(f"Error in CES listener: {e}")
