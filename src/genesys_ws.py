@@ -16,8 +16,8 @@ import asyncio
 import json
 import logging
 
-from ces_ws import CESWS
-from redaction import redact
+from .ces_ws import CESWS
+from .redaction import redact
 
 logger = logging.getLogger(__name__)
 

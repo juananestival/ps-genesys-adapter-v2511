@@ -25,7 +25,7 @@ import google.auth
 from google.auth.transport import requests as google_auth_requests
 from google.cloud import secretmanager
 
-import config
+from . import config
 
 logger = logging.getLogger(__name__)
 

@@ -23,8 +23,8 @@ import google.auth
 import websockets
 from websockets.connection import State
 
-from auth import auth_provider
-from redaction import redact
+from .auth import auth_provider
+from .redaction import redact
 
 logger = logging.getLogger(__name__)
 

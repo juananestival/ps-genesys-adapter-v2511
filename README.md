@@ -149,13 +149,19 @@ You will need a second Cloud Shell terminal to run the adapter itself.
 
 1.  **Open a new terminal** and navigate to the project directory.
 
-2.  Activate the project's virtual environment:
+2.  **Set Environment Variables**: The application requires environment variables to be set. You can create a `.env` file in the root of the project to manage these variables.
+    ```bash
+    # .env
+    PORT=8080
+    GENESYS_API_KEY=your_genesys_api_key
+    ```
+
+3.  Activate the project's virtual environment:
     ```bash
     . .venv/bin/activate
     ```
 
-3.  Start the adapter application:
+4.  Start the adapter application using the development script:
     ```bash
-    # Make sure you have configured your .env file with PORT and GENESYS_API_KEY
-    python main.py
+    bash script/run-dev.sh
     ```

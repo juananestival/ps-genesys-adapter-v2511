@@ -19,9 +19,9 @@ import sys
 
 import websockets
 
-import config
-from auth import auth_provider
-from genesys_ws import GenesysWS
+from . import config
+from .auth import auth_provider
+from .genesys_ws import GenesysWS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

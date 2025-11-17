@@ -2,7 +2,7 @@
 
 import json
 
-from config import LOG_UNREDACTED_DATA
+from .config import LOG_UNREDACTED_DATA
 
 REDACT_KEYS = ["inputVariables", "participant", "variables"]
 
