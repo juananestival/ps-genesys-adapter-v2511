@@ -3,17 +3,19 @@
 # Service Specific Terms available at https://cloud.google.com/terms/service-terms.
 
 import asyncio
-import json
-import logging
-import time
-from google.cloud import secretmanager
-import google.auth
-from google.auth.transport import requests as google_auth_requests
-import config
+import base64
 import hashlib
 import hmac
-import base64
+import json
+import logging
 import re
+import time
+
+import google.auth
+from google.auth.transport import requests as google_auth_requests
+from google.cloud import secretmanager
+
+import config
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +61,13 @@ class Auth:
 
             self._token_info = {
                 "access_token": token_data["access_token"],
-                "expiry": token_data["expiry"]
+                "expiry": token_data["expiry"],
             }
             logger.info("Successfully loaded auth token from Secret Manager.")
         except Exception as e:
-            logger.error(f"Failed to load auth token from Secret Manager: {e}", exc_info=True)
+            logger.error(
+                f"Failed to load auth token from Secret Manager: {e}", exc_info=True
+            )
             # If we fail, clear the token info to force a retry on the next call.
             self._token_info = {}
             raise
@@ -89,14 +93,16 @@ class Auth:
                     return False
 
                 # Parse Signature header
-                match = re.search(r'''sig1=:(.*?):''', signature_header)
+                match = re.search(r"""sig1=:(.*?):""", signature_header)
                 if not match:
                     logger.warning("Could not parse signature from Signature header.")
                     return False
                 received_signature_b64 = match.group(1)
 
                 # Parse Signature-Input header
-                match_input = re.search(r'''sig1=\((.*?)\);(.*)''', signature_input_header)
+                match_input = re.search(
+                    r"""sig1=\((.*?)\);(.*)""", signature_input_header
+                )
                 if not match_input:
                     logger.warning("Could not parse Signature-Input header.")
                     return False
@@ -104,40 +110,58 @@ class Auth:
                 signed_components_str = match_input.group(1)
                 signature_params_str = match_input.group(2)
 
-                signed_component_names = [comp.strip().strip('''"''') for comp in signed_components_str.split(' ')]
+                signed_component_names = [
+                    comp.strip().strip('''"''')
+                    for comp in signed_components_str.split(" ")
+                ]
 
                 # Construct the canonical signature base
                 signature_base_lines = []
                 for component_name in signed_component_names:
                     if component_name == "@request-target":
-                        signature_base_lines.append(f'''"@request-target": {request.path}''')
+                        signature_base_lines.append(
+                            f""""@request-target": {request.path}"""
+                        )
                     elif component_name == "@authority":
-                        signature_base_lines.append(f'''"@authority": {headers.get("host")}''')
+                        signature_base_lines.append(
+                            f""""@authority": {headers.get("host")}"""
+                        )
                     else:
                         header_value = headers.get(component_name)
                         if header_value is None:
-                            logger.error(f"Missing required header for signature: {component_name}")
+                            logger.error(
+                                "Missing required header for signature: "
+                                f"{component_name}"
+                            )
                             return False
-                        signature_base_lines.append(f'''"{component_name.lower()}": {header_value}''')
+                        signature_base_lines.append(
+                            f""""{component_name.lower()}": {header_value}"""
+                        )
 
-                signature_base_lines.append(f'''"@signature-params": ({signed_components_str});{signature_params_str}''')
+                signature_base_lines.append(
+                    f'"@signature-params": ({signed_components_str});'
+                    f"{signature_params_str}"
+                )
                 canonical_signature_base = "\n".join(signature_base_lines)
 
                 # Compute the HMAC-SHA256 hash
                 computed_hmac = hmac.new(
-                    secret,
-                    canonical_signature_base.encode('utf-8'),
-                    hashlib.sha256
+                    secret, canonical_signature_base.encode("utf-8"), hashlib.sha256
                 ).digest()
-                computed_signature_b64 = base64.b64encode(computed_hmac).decode('utf-8')
+                computed_signature_b64 = base64.b64encode(computed_hmac).decode("utf-8")
 
                 # Compare signatures
-                if not hmac.compare_digest(computed_signature_b64, received_signature_b64):
+                if not hmac.compare_digest(
+                    computed_signature_b64, received_signature_b64
+                ):
                     logger.error("Signature verification failed!")
                     return False
 
             except Exception as e:
-                logger.error(f"An error occurred during signature verification: {e}", exc_info=True)
+                logger.error(
+                    f"An error occurred during signature verification: {e}",
+                    exc_info=True,
+                )
                 return False
 
         return True

@@ -3,6 +3,7 @@
 # Service Specific Terms available at https://cloud.google.com/terms/service-terms.
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
