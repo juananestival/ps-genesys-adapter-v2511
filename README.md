@@ -165,3 +165,117 @@ You will need a second Cloud Shell terminal to run the adapter itself.
     ```bash
     bash script/run-dev.sh
     ```
+
+# Notes:
+## Handling end_session
+When the Virtual Agent trigger and end_session the message received by the conector fom ces will be similar to this
+```json
+{
+   "endSession":{
+      "metadata":{
+         "session_escalated":true,
+         "reason":"escalate_to_human",
+         "params":{
+            "conversation_summary":"User explicitly asked to speak to a human agent."
+         }
+      }
+   }
+}
+```
+
+To send the params to Geesys Audio connector it will be needed to send  disconnect message like this:
+
+```json
+{
+  "version": "2",
+  "type": "disconnect",
+  "seq": 7,
+  "clientseq": 13,
+  "id": "e160e428-53e2-487c-977d-96989bf5c99d",
+  "parameters": {
+    "reason": "completed",
+    "outputVariables": {
+        "key1": "value1"
+    }
+  }
+}
+```
+
+The outputVariables sent by this method will be available in Genesys Architect to continue with the flow. 
+
+Sometimes if end_session is not properly configured in prompt and/or examples the end_session can be shown as part of the transcript Like this:
+
+
+```json
+{
+   "sessionOutput":{
+      "turnCompleted":true,
+      "turnIndex":2,
+      "diagnosticInfo":{
+         "messages":[
+            {
+               "role":"user",
+               "chunks":[
+                  {
+                     "transcript":" Quiero hablar con una gente, por favor."
+                  }
+               ],
+               "eventTime":"2025-11-28T15:10:41.304Z"
+            },
+            {
+               "role":"Root Agent",
+               "chunks":[
+                  {
+                     "transcript":"print(default_api.end_session(reason='escalate_to_human', session_escalated=True))"
+                  }
+               ],
+               "eventTime":"2025-11-28T15:10:41.868Z"
+            }
+         ],
+         "rootSpan":{
+            "name":"root",
+            "startTime":"2025-11-28T15:10:32.513548Z",
+            "endTime":"2025-11-28T15:10:43.430495Z",
+            "attributes":{
+               "perceived latency (ms)":761
+            },
+            "childSpans":[
+               {
+                  "name":"VAD",
+                  "startTime":"2025-11-28T15:10:39.801454Z",
+                  "endTime":"2025-11-28T15:10:41.303418Z",
+                  "duration":"1.501964s"
+               },
+               {
+                  "name":"LLM",
+                  "startTime":"2025-11-28T15:10:41.305254Z",
+                  "endTime":"2025-11-28T15:10:41.868425Z",
+                  "attributes":{
+                     "time to first chunk (ms)":549,
+                     "model":"gemini-2.5-flash-001",
+                     "input token count":4824,
+                     "output token count":26
+                  },
+                  "duration":"0.563171s"
+               },
+               {
+                  "name":"TTS",
+                  "startTime":"2025-11-28T15:10:41.869187Z",
+                  "endTime":"2025-11-28T15:10:43.430261Z",
+                  "attributes":{
+                     "voice":"es-ES-Chirp3-HD-Aoede",
+                     "time to first audio (ms)":196,
+                     "audio duration (ms)":10839
+                  },
+                  "duration":"1.561074s"
+               }
+            ],
+            "duration":"10.916947s"
+         }
+      }
+   }
+}
+```
+This is as well handled in the code. 
+
+

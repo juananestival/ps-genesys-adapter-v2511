@@ -161,12 +161,15 @@ class GenesysWS:
 
             elif message_type == "close":
                 closed_message = {
+                    "version": "2",
                     "type": "closed",
                     "id": self.client_session_id,
                     "seq": self.get_next_server_sequence_number(),
                     "clientseq": self.last_client_sequence_number,
                 }
                 await self.send_message(closed_message)
+                # Wait for 5 seconds without blocking other connections. This avoid a racing condition that prevent genesys to receive the disconnect with params. 
+                await asyncio.sleep(5) 
                 await self.websocket.close()
 
             elif message_type == "update":
@@ -179,14 +182,21 @@ class GenesysWS:
 
     async def send_disconnect(self, reason, info):
         disconnect_message = {
+            "version": "2",
             "type": "disconnect",
             "id": self.client_session_id,
             "seq": self.get_next_server_sequence_number(),
             "clientseq": self.last_client_sequence_number,
-            "parameters": {"reason": reason, "info": info},
+            "parameters": {
+                "reason": reason,
+                "outputVariables": {
+                    "key1": info
+                }
+            }
         }
+        logger.info(f"Sending disconnect message to Genesys: {disconnect_message}")
         await self.send_message(disconnect_message)
-        await self.websocket.close()
+        #await self.websocket.close()
 
     def get_next_server_sequence_number(self):
         self.last_server_sequence_number += 1

@@ -119,6 +119,7 @@ class CESWS:
 
     async def listen(self):
         try:
+   
             while self.is_connected():
                 message = await self.websocket.recv()
                 data = json.loads(message)
@@ -142,6 +143,33 @@ class CESWS:
                     logger.info(
                         f"Received text from CES: {redacted_text}"
                     )
+                    if "end_session" in text.lower():
+                        logger.error(f"End Session as text in sessionOutput. Received text from CES text: {text}It shouldn't be here as this is text to be reat to the customer. Calling disconnect in Genesys with error returned")
+                        await self.genesys_ws.send_disconnect("completed", info="no_params_error_1")
+
+                elif "sessionOutput" in data and "diagnosticInfo" in data["sessionOutput"]:
+                    if "messages" in data["sessionOutput"]["diagnosticInfo"]:
+                        for message in data["sessionOutput"]["diagnosticInfo"]["messages"]:
+                            if "end_session" in message["chunks"][0]:
+                                logger.error(f"End Session in turn complete. It shouldn't be here  Received text from CES text: {text}It shouldn't be here as this is text to be reat to the customer. Calling disconnect in Genesys with error returned")
+                                await self.genesys_ws.send_disconnect("completed", info="no_params_error_2")                  
+            
+                elif "recognitionResult" in data:
+                    pass
+                # Implement your own logic here
+                elif "endSession" in data:
+                    logger.info(f"Received endSession from CES: {data}")
+                    if "params" in data['endSession']['metadata'] and "conversation_summary" in data['endSession']['metadata']['params']:
+                        params = data['endSession']['metadata']['params']['conversation_summary']
+                    else:
+                        params = None
+                        
+                    await self.genesys_ws.send_disconnect("completed", info=params)
+                else: 
+                    logger.warning(f"Received unknown message from CES: {data}")
+
+                # end custom logic
+
         except Exception as e:
             logger.error(f"Error in CES listener: {e}")
 
