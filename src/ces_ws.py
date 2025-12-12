@@ -123,6 +123,10 @@ class CESWS:
             while self.is_connected():
                 message = await self.websocket.recv()
                 data = json.loads(message)
+                
+
+                # custom logic
+
 
                 if "sessionOutput" in data and "audio" in data["sessionOutput"]:
                     linear_audio_16k = base64.b64decode(data["sessionOutput"]["audio"])
@@ -141,30 +145,37 @@ class CESWS:
                     text = data['sessionOutput']['text']
                     redacted_text = redact(text)
                     logger.info(
-                        f"Received text from CES: {redacted_text}"
+                        f"Received text from CES: {text} and data{data}"
                     )
                     if "end_session" in text.lower():
                         logger.error(f"End Session as text in sessionOutput. Received text from CES text: {text}It shouldn't be here as this is text to be reat to the customer. Calling disconnect in Genesys with error returned")
-                        await self.genesys_ws.send_disconnect("completed", info="no_params_error_1")
+                        await self.genesys_ws.send_disconnect("completed", params="no_params_error_1")
 
                 elif "sessionOutput" in data and "diagnosticInfo" in data["sessionOutput"]:
                     if "messages" in data["sessionOutput"]["diagnosticInfo"]:
+                        #data["sessionOutput"]["diagnosticInfo"]["messages"][0]["chunks"][1]["updatedVariables"]
                         for message in data["sessionOutput"]["diagnosticInfo"]["messages"]:
                             if "end_session" in message["chunks"][0]:
                                 logger.error(f"End Session in turn complete. It shouldn't be here  Received text from CES text: {text}It shouldn't be here as this is text to be reat to the customer. Calling disconnect in Genesys with error returned")
-                                await self.genesys_ws.send_disconnect("completed", info="no_params_error_2")                  
-            
+                                await self.genesys_ws.send_disconnect("completed", params="no_params_error_2")                  
+                        #if "chunks" in data["sessionOutput"]["diagnosticInfo"]["messages"][0]:
+                        #    logger.warning(f"Received diagnosticInfo from CES: {data["sessionOutput"]["diagnosticInfo"]["messages"][0]["chunks"][1]["updatedVariables"]}")
+
+                            
                 elif "recognitionResult" in data:
                     pass
                 # Implement your own logic here
                 elif "endSession" in data:
                     logger.info(f"Received endSession from CES: {data}")
-                    if "params" in data['endSession']['metadata'] and "conversation_summary" in data['endSession']['metadata']['params']:
-                        params = data['endSession']['metadata']['params']['conversation_summary']
+                    #if "params" in data['endSession']['metadata'] and "conversation_summary" in data['endSession']['metadata']['params']:
+                    if "params" in data['endSession']['metadata']:
+                        # Juanan Dec 9 remove conv summary
+                        params = data['endSession']['metadata']['params']
+                        logger.warning(f"Received params from CES: {params}")
                     else:
                         params = None
                         
-                    await self.genesys_ws.send_disconnect("completed", info=params)
+                    await self.genesys_ws.send_disconnect("completed", params=params)
                 else: 
                     logger.warning(f"Received unknown message from CES: {data}")
 

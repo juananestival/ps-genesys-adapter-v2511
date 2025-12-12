@@ -150,27 +150,50 @@ class GenesysWS:
                 await self.send_message(opened_message)
 
             elif message_type == "ping":
+                logger.warning("PONG")
                 pong_message = {
                     "type": "pong",
                     "version": "2",
                     "id": self.client_session_id,
                     "seq": self.get_next_server_sequence_number(),
                     "clientseq": self.last_client_sequence_number,
+                    "parameters": {}
                 }
                 await self.send_message(pong_message)
 
             elif message_type == "close":
+                
+                params = {
+                    "Escalation_Reason":"UNMAPPED_UNSUPPORTED_INTENT",
+                    "VBg_msg_KO":"",
+                    "VBg_input_text":"Problemas con roaming en Francia",
+                    "VBg_MSISDN":"622222222",
+                    "VBg_PaA_summary_text":"Usuario reporta problemas con datos en roaming estando en Francia.",
+                    "VBg_DocumentId":"87654321B",
+                    "VBg_msg_OK":"Le paso con un agente para revisar su caso de roaming.",
+                    "VBg_end_msg":"Gracias por llamar a MasMovil. Test dos completado.",
+                    "VBg_SessionId":"MM_TEST_SESS_002",
+                    "VBg_CustomerId":"CUST002",
+                    "Data":"{\"test_scenario\": 2, \"status\": \"escalate\", \"country\": \"Francia\"}",
+                }
+                #params = '{"VBg_msg_KO":"el cliente cuelga"}'
+                
+               
+                #await asyncio.sleep(3) 
+                
                 closed_message = {
                     "version": "2",
                     "type": "closed",
                     "id": self.client_session_id,
                     "seq": self.get_next_server_sequence_number(),
-                    "clientseq": self.last_client_sequence_number,
+                    "clientseq": self.last_client_sequence_number
                 }
+                
                 await self.send_message(closed_message)
+                await self.send_disconnect("completed", params=params)
                 # Wait for 5 seconds without blocking other connections. This avoid a racing condition that prevent genesys to receive the disconnect with params. 
-                await asyncio.sleep(5) 
-                await self.websocket.close()
+                # await asyncio.sleep(1) 
+                #await self.websocket.close()
 
             elif message_type == "update":
                 logger.info(f"Received update message from Genesys: {data}")
@@ -180,7 +203,14 @@ class GenesysWS:
             logger.error(f"Error decoding JSON from Genesys: {message}")
             await self.send_disconnect("error", "Invalid JSON received")
 
-    async def send_disconnect(self, reason, info):
+    async def send_disconnect(self, reason, params):
+        logger.warning(f"Sending params message to Genesys: {params} type {type(params)}")
+        output_variables = {}
+        for key, value in params.items():
+            logger.warning(f"  - {key}: {value}")
+            output_variables[key] = value   
+        
+        logger.warning(f"Sending params 3 message to Genesys: {output_variables} type {type(output_variables)}")
         disconnect_message = {
             "version": "2",
             "type": "disconnect",
@@ -190,10 +220,11 @@ class GenesysWS:
             "parameters": {
                 "reason": reason,
                 "outputVariables": {
-                    "key1": info
+                    "key1": params
                 }
             }
         }
+        disconnect_message['parameters']['outputVariables'] = output_variables
         logger.info(f"Sending disconnect message to Genesys: {disconnect_message}")
         await self.send_message(disconnect_message)
         #await self.websocket.close()

@@ -279,3 +279,20 @@ Sometimes if end_session is not properly configured in prompt and/or examples th
 This is as well handled in the code. 
 
 
+params format
+```json
+{
+   "Escalation_Reason":"UNMAPPED_UNSUPPORTED_INTENT",
+   "VBg_msg_KO":"",
+   "VBg_input_text":"Problemas con roaming en Francia",
+   "VBg_MSISDN":"622222222",
+   "VBg_PaA_summary_text":"Usuario reporta problemas con datos en roaming estando en Francia.",
+   "VBg_DocumentId":"87654321B",
+   "VBg_msg_OK":"Le paso con un agente para revisar su caso de roaming.",
+   "VBg_end_msg":"Gracias por llamar a MasMovil. Test dos completado.",
+   "VBg_SessionId":"MM_TEST_SESS_002",
+   "VBg_CustomerId":"CUST002",
+   "Data":"{\"test_scenario\": 2, \"status\": \"escalate\", \"country\": \"Francia\"}",
+   "VBg_intent":"roaming_problema"
+}
+```
